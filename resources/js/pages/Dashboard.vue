@@ -4,9 +4,9 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import PlaceholderPattern from '../components/PlaceholderPattern.vue';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
-// Import PrimeVue components with type assertions if needed
+// Import PrimeVue components
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -15,6 +15,56 @@ import Column from 'primevue/column';
 import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Tag from 'primevue/tag';
+import Toolbar from 'primevue/toolbar';
+import FileUpload from 'primevue/fileupload';
+import Rating from 'primevue/rating';
+import Dialog from 'primevue/dialog';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Select from 'primevue/select';
+import RadioButton from 'primevue/radiobutton';
+import InputNumber from 'primevue/inputnumber';
+import Textarea from 'primevue/textarea';
+import { useToast } from 'primevue/usetoast';
+
+// Define FilterMatchMode manually
+const FilterMatchMode = {
+    CONTAINS: 'contains'
+};
+
+// Define TypeScript interfaces
+interface Product {
+    id: string;
+    code: string;
+    name: string;
+    description: string;
+    image: string;
+    price: number;
+    category: string;
+    quantity: number;
+    inventoryStatus: string;
+    rating: number;
+}
+
+interface StatusOption {
+    label: string;
+    value: string;
+}
+
+interface StatData {
+    label: string;
+    value: string;
+    growth: string;
+    icon: string;
+}
+
+interface Activity {
+    id: number;
+    action: string;
+    user: string;
+    time: string;
+    status: string;
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,18 +75,118 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Sample data for demonstration
 const testInput = ref('');
-const recentActivities = ref([
+const recentActivities = ref<Activity[]>([
     { id: 1, action: 'User Login', user: 'John Doe', time: '2 min ago', status: 'Completed' },
     { id: 2, action: 'Data Export', user: 'Jane Smith', time: '5 min ago', status: 'Processing' },
     { id: 3, action: 'Report Generated', user: 'Mike Johnson', time: '10 min ago', status: 'Completed' },
     { id: 4, action: 'System Backup', user: 'System', time: '15 min ago', status: 'Failed' },
 ]);
 
-const statsData = ref([
+const statsData = ref<StatData[]>([
     { label: 'Total Users', value: '1,234', growth: '+12%', icon: 'pi pi-users' },
     { label: 'Revenue', value: '$45,678', growth: '+8%', icon: 'pi pi-dollar' },
     { label: 'Orders', value: '567', growth: '+23%', icon: 'pi pi-shopping-cart' },
 ]);
+
+// Product Management Data
+const toast = useToast();
+const dt = ref();
+const products = ref<Product[]>([]);
+const productDialog = ref(false);
+const deleteProductDialog = ref(false);
+const deleteProductsDialog = ref(false);
+const product = ref<Partial<Product>>({});
+const selectedProducts = ref<Product[]>();
+const filters = ref({
+    'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
+const submitted = ref(false);
+const statuses = ref<StatusOption[]>([
+    { label: 'INSTOCK', value: 'instock' },
+    { label: 'LOWSTOCK', value: 'lowstock' },
+    { label: 'OUTOFSTOCK', value: 'outofstock' }
+]);
+
+// Mock product data
+const mockProducts: Product[] = [
+    {
+        id: '1000',
+        code: 'f230fh0g3',
+        name: 'Bamboo Watch',
+        description: 'Product Description',
+        image: 'bamboo-watch.jpg',
+        price: 65,
+        category: 'Accessories',
+        quantity: 24,
+        inventoryStatus: 'INSTOCK',
+        rating: 5
+    },
+    {
+        id: '1001',
+        code: 'nvklal433',
+        name: 'Black Watch',
+        description: 'Product Description',
+        image: 'black-watch.jpg',
+        price: 72,
+        category: 'Accessories',
+        quantity: 61,
+        inventoryStatus: 'INSTOCK',
+        rating: 4
+    },
+    {
+        id: '1002',
+        code: 'zz21cz3c1',
+        name: 'Blue Band',
+        description: 'Product Description',
+        image: 'blue-band.jpg',
+        price: 79,
+        category: 'Fitness',
+        quantity: 2,
+        inventoryStatus: 'LOWSTOCK',
+        rating: 3
+    },
+    {
+        id: '1003',
+        code: '244wgerg2',
+        name: 'Blue T-Shirt',
+        description: 'Product Description',
+        image: 'blue-t-shirt.jpg',
+        price: 29,
+        category: 'Clothing',
+        quantity: 25,
+        inventoryStatus: 'INSTOCK',
+        rating: 5
+    },
+    {
+        id: '1004',
+        code: 'h456wer53',
+        name: 'Bracelet',
+        description: 'Product Description',
+        image: 'bracelet.jpg',
+        price: 15,
+        category: 'Accessories',
+        quantity: 73,
+        inventoryStatus: 'INSTOCK',
+        rating: 4
+    },
+    {
+        id: '1005',
+        code: 'av2231fwg',
+        name: 'Brown Purse',
+        description: 'Product Description',
+        image: 'brown-purse.jpg',
+        price: 120,
+        category: 'Accessories',
+        quantity: 0,
+        inventoryStatus: 'OUTOFSTOCK',
+        rating: 4
+    }
+];
+
+onMounted(() => {
+    // Simulate API call
+    products.value = mockProducts;
+});
 
 const getStatusSeverity = (status: string) => {
     switch (status) {
@@ -49,6 +199,128 @@ const getStatusSeverity = (status: string) => {
 
 const showAlert = () => {
     alert(`You entered: ${testInput.value}`);
+};
+
+// Product Management Functions
+const formatCurrency = (value: number) => {
+    if (value)
+        return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    return '';
+};
+
+const openNew = () => {
+    product.value = {};
+    submitted.value = false;
+    productDialog.value = true;
+};
+
+const hideDialog = () => {
+    productDialog.value = false;
+    submitted.value = false;
+};
+
+const saveProduct = () => {
+    submitted.value = true;
+
+    if (product.value?.name?.trim()) {
+        if (product.value.id) {
+            // For existing product
+            product.value.inventoryStatus = (product.value.inventoryStatus as any)?.value 
+                ? (product.value.inventoryStatus as any).value 
+                : product.value.inventoryStatus;
+            
+            const index = findIndexById(product.value.id);
+            if (index !== -1) {
+                products.value[index] = { ...product.value } as Product;
+            }
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
+        } else {
+            // For new product
+            const newProduct: Product = {
+                id: createId(),
+                code: createId(),
+                name: product.value.name || '',
+                description: product.value.description || '',
+                image: 'product-placeholder.svg',
+                price: product.value.price || 0,
+                category: product.value.category || '',
+                quantity: product.value.quantity || 0,
+                inventoryStatus: (product.value.inventoryStatus as any)?.value 
+                    ? (product.value.inventoryStatus as any).value 
+                    : product.value.inventoryStatus || 'INSTOCK',
+                rating: 0
+            };
+            products.value.push(newProduct);
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
+        }
+
+        productDialog.value = false;
+        product.value = {};
+    }
+};
+
+const editProduct = (prod: Product) => {
+    product.value = { ...prod };
+    productDialog.value = true;
+};
+
+const confirmDeleteProduct = (prod: Product) => {
+    product.value = prod;
+    deleteProductDialog.value = true;
+};
+
+const deleteProduct = () => {
+    if (product.value.id) {
+        products.value = products.value.filter(val => val.id !== product.value.id);
+        deleteProductDialog.value = false;
+        product.value = {};
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+    }
+};
+
+const findIndexById = (id: string) => {
+    return products.value.findIndex(product => product.id === id);
+};
+
+const createId = () => {
+    let id = '';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 5; i++) {
+        id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return id;
+};
+
+const exportCSV = () => {
+    if (dt.value) {
+        dt.value.exportCSV();
+    }
+};
+
+const confirmDeleteSelected = () => {
+    deleteProductsDialog.value = true;
+};
+
+const deleteSelectedProducts = () => {
+    if (selectedProducts.value) {
+        products.value = products.value.filter(val => !selectedProducts.value!.includes(val));
+        deleteProductsDialog.value = false;
+        selectedProducts.value = undefined;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
+    }
+};
+
+const getStatusLabel = (status: string) => {
+    switch (status) {
+        case 'INSTOCK':
+            return 'success';
+        case 'LOWSTOCK':
+            return 'warning';
+        case 'OUTOFSTOCK':
+            return 'danger';
+        default:
+            return null;
+    }
 };
 </script>
 
@@ -135,6 +407,117 @@ const showAlert = () => {
                 </Card>
             </div>
 
+            <!-- Product Management Section -->
+            <Card class="shadow-lg">
+                <template #title>Product Management</template>
+                <template #content>
+                    <div class="card">
+                        <Toolbar class="mb-4">
+                            <template #start>
+                                <Button label="New" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                                <Button 
+                                    label="Delete" 
+                                    icon="pi pi-trash" 
+                                    severity="danger" 
+                                    variant="outlined" 
+                                    @click="confirmDeleteSelected" 
+                                    :disabled="!selectedProducts || !selectedProducts.length" 
+                                />
+                            </template>
+
+                            <template #end>
+                                <FileUpload 
+                                    mode="basic" 
+                                    accept="image/*" 
+                                    :maxFileSize="1000000" 
+                                    label="Import" 
+                                    customUpload 
+                                    chooseLabel="Import" 
+                                    class="mr-2 inline-block" 
+                                    auto 
+                                />
+                                <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV()" />
+                            </template>
+                        </Toolbar>
+
+                        <DataTable
+                            ref="dt"
+                            v-model:selection="selectedProducts"
+                            :value="products"
+                            dataKey="id"
+                            :paginator="true"
+                            :rows="10"
+                            :filters="filters"
+                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                            :rowsPerPageOptions="[5, 10, 25]"
+                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                            class="p-datatable-sm"
+                        >
+                            <template #header>
+                                <div class="flex flex-wrap gap-2 items-center justify-between">
+                                    <h4 class="m-0 text-lg font-semibold">Manage Products</h4>
+                                    <IconField iconPosition="left" class="w-auto">
+                                        <InputIcon class="pi pi-search" />
+                                        <InputText v-model="filters['global'].value" placeholder="Search..." />
+                                    </IconField>
+                                </div>
+                            </template>
+
+                            <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+                            <Column field="code" header="Code" sortable style="min-width: 8rem"></Column>
+                            <Column field="name" header="Name" sortable style="min-width: 12rem"></Column>
+                            <Column header="Image" style="min-width: 6rem">
+                                <template #body="slotProps">
+                                    <img 
+                                        :src="`https://primefaces.org/cdn/primevue/images/product/${slotProps.data.image}`" 
+                                        :alt="slotProps.data.image" 
+                                        class="rounded border" 
+                                        style="width: 48px; height: 48px; object-fit: cover;" 
+                                    />
+                                </template>
+                            </Column>
+                            <Column field="price" header="Price" sortable style="min-width: 8rem">
+                                <template #body="slotProps">
+                                    {{ formatCurrency(slotProps.data.price) }}
+                                </template>
+                            </Column>
+                            <Column field="category" header="Category" sortable style="min-width: 10rem"></Column>
+                            <Column field="rating" header="Reviews" sortable style="min-width: 10rem">
+                                <template #body="slotProps">
+                                    <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
+                                </template>
+                            </Column>
+                            <Column field="inventoryStatus" header="Status" sortable style="min-width: 10rem">
+                                <template #body="slotProps">
+                                    <Tag 
+                                        :value="slotProps.data.inventoryStatus" 
+                                        :severity="getStatusLabel(slotProps.data.inventoryStatus)" 
+                                    />
+                                </template>
+                            </Column>
+                            <Column :exportable="false" style="min-width: 10rem">
+                                <template #body="slotProps">
+                                    <Button 
+                                        icon="pi pi-pencil" 
+                                        variant="outlined" 
+                                        rounded 
+                                        class="mr-2" 
+                                        @click="editProduct(slotProps.data)" 
+                                    />
+                                    <Button 
+                                        icon="pi pi-trash" 
+                                        variant="outlined" 
+                                        rounded 
+                                        severity="danger" 
+                                        @click="confirmDeleteProduct(slotProps.data)" 
+                                    />
+                                </template>
+                            </Column>
+                        </DataTable>
+                    </div>
+                </template>
+            </Card>
+
             <!-- Recent Activities Table -->
             <Card class="shadow-lg">
                 <template #title>Recent Activities</template>
@@ -154,6 +537,112 @@ const showAlert = () => {
                     </DataTable>
                 </template>
             </Card>
+
+            <!-- Product Management Dialogs -->
+            <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true" class="p-fluid">
+                <div class="flex flex-col gap-4">
+                    <div class="field">
+                        <label for="name" class="font-semibold">Name</label>
+                        <InputText 
+                            id="name" 
+                            v-model.trim="product.name" 
+                            required="true" 
+                            autofocus 
+                            :class="{ 'p-invalid': submitted && !product.name }" 
+                        />
+                        <small class="p-invalid" v-if="submitted && !product.name">Name is required.</small>
+                    </div>
+                    <div class="field">
+                        <label for="description" class="font-semibold">Description</label>
+                        <Textarea 
+                            id="description" 
+                            v-model="product.description" 
+                            required="true" 
+                            rows="3" 
+                            cols="20" 
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="inventoryStatus" class="font-semibold">Inventory Status</label>
+                        <Select 
+                            id="inventoryStatus" 
+                            v-model="product.inventoryStatus" 
+                            :options="statuses" 
+                            optionLabel="label" 
+                            placeholder="Select a Status" 
+                        />
+                    </div>
+                    <div class="field">
+                        <label class="font-semibold mb-3 block">Category</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex items-center">
+                                <RadioButton id="category1" v-model="product.category" name="category" value="Accessories" />
+                                <label for="category1" class="ml-2">Accessories</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton id="category2" v-model="product.category" name="category" value="Clothing" />
+                                <label for="category2" class="ml-2">Clothing</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton id="category3" v-model="product.category" name="category" value="Electronics" />
+                                <label for="category3" class="ml-2">Electronics</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton id="category4" v-model="product.category" name="category" value="Fitness" />
+                                <label for="category4" class="ml-2">Fitness</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="field">
+                            <label for="price" class="font-semibold">Price</label>
+                            <InputNumber 
+                                id="price" 
+                                v-model="product.price" 
+                                mode="currency" 
+                                currency="USD" 
+                                locale="en-US" 
+                            />
+                        </div>
+                        <div class="field">
+                            <label for="quantity" class="font-semibold">Quantity</label>
+                            <InputNumber 
+                                id="quantity" 
+                                v-model="product.quantity" 
+                                integeronly 
+                            />
+                        </div>
+                    </div>
+                </div>
+                <template #footer>
+                    <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+                    <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+                </template>
+            </Dialog>
+
+            <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                <div class="flex items-center gap-4">
+                    <i class="pi pi-exclamation-triangle text-3xl text-red-500" />
+                    <span v-if="product">
+                        Are you sure you want to delete <b>{{ product.name }}</b>?
+                    </span>
+                </div>
+                <template #footer>
+                    <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
+                    <Button label="Yes" icon="pi pi-check" text @click="deleteProduct" severity="danger" />
+                </template>
+            </Dialog>
+
+            <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+                <div class="flex items-center gap-4">
+                    <i class="pi pi-exclamation-triangle text-3xl text-red-500" />
+                    <span>Are you sure you want to delete the selected products?</span>
+                </div>
+                <template #footer>
+                    <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
+                    <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" severity="danger" />
+                </template>
+            </Dialog>
 
             <!-- Original Placeholder Sections -->
             <div class="grid auto-rows-min gap-4 md:grid-cols-3">

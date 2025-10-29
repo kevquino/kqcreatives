@@ -10,8 +10,9 @@ import { initializeTheme } from './composables/useAppearance';
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import 'primeicons/primeicons.css';
+import ToastService from 'primevue/toastservice'; // Add this import
 
-// Import and register components globally
+// Import and register ALL components globally that are used in Dashboard
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -20,6 +21,17 @@ import Column from 'primevue/column';
 import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Tag from 'primevue/tag';
+import Toolbar from 'primevue/toolbar';
+import FileUpload from 'primevue/fileupload';
+import Rating from 'primevue/rating';
+import Dialog from 'primevue/dialog';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Select from 'primevue/select';
+import RadioButton from 'primevue/radiobutton';
+import InputNumber from 'primevue/inputnumber';
+import Textarea from 'primevue/textarea';
+import Toast from 'primevue/toast'; // Add this import
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -33,7 +45,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const app = createApp({ render: () => h(App, props) });
         
-        // Register components globally
+        // Register ALL components globally
         app.component('Card', Card);
         app.component('Button', Button);
         app.component('InputText', InputText);
@@ -42,19 +54,33 @@ createInertiaApp({
         app.component('ProgressBar', ProgressBar);
         app.component('Badge', Badge);
         app.component('Tag', Tag);
+        app.component('Toolbar', Toolbar);
+        app.component('FileUpload', FileUpload);
+        app.component('Rating', Rating);
+        app.component('Dialog', Dialog);
+        app.component('IconField', IconField);
+        app.component('InputIcon', InputIcon);
+        app.component('Select', Select);
+        app.component('RadioButton', RadioButton);
+        app.component('InputNumber', InputNumber);
+        app.component('Textarea', Textarea);
+        app.component('Toast', Toast); // Register Toast component
         
-        // Use PrimeVue with Aura theme - CORRECT CONFIGURATION
+        // Use PrimeVue with Aura theme
         app.use(PrimeVue, {
             theme: {
                 preset: Aura,
                 options: {
-                    darkModeSelector: '.dark', // or 'media' for system preference
+                    darkModeSelector: '.dark',
                     cssLayer: false
                 }
             },
             ripple: true,
-            unstyled: false // Make sure this is false to apply styles
+            unstyled: false
         } as any);
+        
+        // Add ToastService
+        app.use(ToastService);
         
         app.use(plugin).mount(el);
     },
