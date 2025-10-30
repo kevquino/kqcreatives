@@ -32,10 +32,10 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- PrimeVue CSS from CDN - Using Lara theme which is more stable -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primevue@4.4.1/resources/themes/lara-light-blue/theme.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primevue@4.4.1/resources/primevue.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeicons@6.0.1/primeicons.css" />
+        {{-- REMOVED PrimeVue theme CDN - Let PrimeVue handle themes internally --}}
+
+        {{-- Only keep primeicons --}}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css" />
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">

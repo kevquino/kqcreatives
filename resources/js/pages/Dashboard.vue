@@ -21,7 +21,7 @@ import Rating from 'primevue/rating';
 import Dialog from 'primevue/dialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Select from 'primevue/select';
+import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
@@ -328,20 +328,21 @@ const getStatusLabel = (status: string) => {
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div
-            class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4"
-        >
+        <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <!-- Toast component for notifications -->
+            <Toast />
+
             <!-- PrimeVue Stats Cards -->
             <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-                <Card v-for="stat in statsData" :key="stat.label" class="shadow-lg">
+                <Card v-for="stat in statsData" :key="stat.label" class="shadow-lg p-3">
                     <template #content>
                         <div class="flex items-center justify-between">
                             <div>
-                                <span class="text-sm font-medium text-gray-500">{{ stat.label }}</span>
-                                <div class="text-2xl font-bold">{{ stat.value }}</div>
-                                <Badge :value="stat.growth" severity="success" />
+                                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ stat.label }}</span>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stat.value }}</div>
+                                <Badge :value="stat.growth" severity="success" class="mt-2" />
                             </div>
-                            <div class="text-3xl text-blue-500">
+                            <div class="text-3xl text-blue-500 dark:text-blue-400">
                                 <i :class="stat.icon"></i>
                             </div>
                         </div>
@@ -353,7 +354,9 @@ const getStatusLabel = (status: string) => {
             <div class="grid gap-4 md:grid-cols-2">
                 <!-- Quick Actions Card -->
                 <Card class="shadow-lg">
-                    <template #title>Quick Actions</template>
+                    <template #title>
+                        <span class="text-lg font-semibold">Quick Actions</span>
+                    </template>
                     <template #content>
                         <div class="flex flex-col space-y-3">
                             <InputText 
@@ -378,27 +381,29 @@ const getStatusLabel = (status: string) => {
 
                 <!-- System Status Card -->
                 <Card class="shadow-lg">
-                    <template #title>System Status</template>
+                    <template #title>
+                        <span class="text-lg font-semibold">System Status</span>
+                    </template>
                     <template #content>
                         <div class="space-y-4">
                             <div>
-                                <div class="flex justify-between mb-1">
-                                    <span>CPU Usage</span>
-                                    <span>65%</span>
+                                <div class="flex justify-between mb-1 text-sm">
+                                    <span class="text-gray-600 dark:text-gray-300">CPU Usage</span>
+                                    <span class="font-medium">65%</span>
                                 </div>
                                 <ProgressBar :value="65" class="h-2" />
                             </div>
                             <div>
-                                <div class="flex justify-between mb-1">
-                                    <span>Memory</span>
-                                    <span>42%</span>
+                                <div class="flex justify-between mb-1 text-sm">
+                                    <span class="text-gray-600 dark:text-gray-300">Memory</span>
+                                    <span class="font-medium">42%</span>
                                 </div>
                                 <ProgressBar :value="42" class="h-2" />
                             </div>
                             <div>
-                                <div class="flex justify-between mb-1">
-                                    <span>Storage</span>
-                                    <span>78%</span>
+                                <div class="flex justify-between mb-1 text-sm">
+                                    <span class="text-gray-600 dark:text-gray-300">Storage</span>
+                                    <span class="font-medium">78%</span>
                                 </div>
                                 <ProgressBar :value="78" class="h-2" />
                             </div>
@@ -409,7 +414,9 @@ const getStatusLabel = (status: string) => {
 
             <!-- Product Management Section -->
             <Card class="shadow-lg">
-                <template #title>Product Management</template>
+                <template #title>
+                    <span class="text-lg font-semibold">Product Management</span>
+                </template>
                 <template #content>
                     <div class="card">
                         <Toolbar class="mb-4">
@@ -419,7 +426,6 @@ const getStatusLabel = (status: string) => {
                                     label="Delete" 
                                     icon="pi pi-trash" 
                                     severity="danger" 
-                                    variant="outlined" 
                                     @click="confirmDeleteSelected" 
                                     :disabled="!selectedProducts || !selectedProducts.length" 
                                 />
@@ -431,10 +437,8 @@ const getStatusLabel = (status: string) => {
                                     accept="image/*" 
                                     :maxFileSize="1000000" 
                                     label="Import" 
-                                    customUpload 
                                     chooseLabel="Import" 
-                                    class="mr-2 inline-block" 
-                                    auto 
+                                    class="mr-2" 
                                 />
                                 <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV()" />
                             </template>
@@ -456,7 +460,7 @@ const getStatusLabel = (status: string) => {
                             <template #header>
                                 <div class="flex flex-wrap gap-2 items-center justify-between">
                                     <h4 class="m-0 text-lg font-semibold">Manage Products</h4>
-                                    <IconField iconPosition="left" class="w-auto">
+                                    <IconField iconPosition="left">
                                         <InputIcon class="pi pi-search" />
                                         <InputText v-model="filters['global'].value" placeholder="Search..." />
                                     </IconField>
@@ -471,7 +475,7 @@ const getStatusLabel = (status: string) => {
                                     <img 
                                         :src="`https://primefaces.org/cdn/primevue/images/product/${slotProps.data.image}`" 
                                         :alt="slotProps.data.image" 
-                                        class="rounded border" 
+                                        class="rounded border shadow-sm" 
                                         style="width: 48px; height: 48px; object-fit: cover;" 
                                     />
                                 </template>
@@ -499,15 +503,15 @@ const getStatusLabel = (status: string) => {
                                 <template #body="slotProps">
                                     <Button 
                                         icon="pi pi-pencil" 
-                                        variant="outlined" 
                                         rounded 
+                                        text
                                         class="mr-2" 
                                         @click="editProduct(slotProps.data)" 
                                     />
                                     <Button 
                                         icon="pi pi-trash" 
-                                        variant="outlined" 
                                         rounded 
+                                        text
                                         severity="danger" 
                                         @click="confirmDeleteProduct(slotProps.data)" 
                                     />
@@ -520,7 +524,9 @@ const getStatusLabel = (status: string) => {
 
             <!-- Recent Activities Table -->
             <Card class="shadow-lg">
-                <template #title>Recent Activities</template>
+                <template #title>
+                    <span class="text-lg font-semibold">Recent Activities</span>
+                </template>
                 <template #content>
                     <DataTable :value="recentActivities" class="p-datatable-sm" paginator :rows="5">
                         <Column field="action" header="Action"></Column>
@@ -550,7 +556,7 @@ const getStatusLabel = (status: string) => {
                             autofocus 
                             :class="{ 'p-invalid': submitted && !product.name }" 
                         />
-                        <small class="p-invalid" v-if="submitted && !product.name">Name is required.</small>
+                        <small class="p-error" v-if="submitted && !product.name">Name is required.</small>
                     </div>
                     <div class="field">
                         <label for="description" class="font-semibold">Description</label>
@@ -564,7 +570,7 @@ const getStatusLabel = (status: string) => {
                     </div>
                     <div class="field">
                         <label for="inventoryStatus" class="font-semibold">Inventory Status</label>
-                        <Select 
+                        <Dropdown 
                             id="inventoryStatus" 
                             v-model="product.inventoryStatus" 
                             :options="statuses" 
@@ -629,7 +635,7 @@ const getStatusLabel = (status: string) => {
                 </div>
                 <template #footer>
                     <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
-                    <Button label="Yes" icon="pi pi-check" text @click="deleteProduct" severity="danger" />
+                    <Button label="Yes" icon="pi pi-check" text @click="deleteProduct" />
                 </template>
             </Dialog>
 
@@ -640,7 +646,7 @@ const getStatusLabel = (status: string) => {
                 </div>
                 <template #footer>
                     <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
-                    <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" severity="danger" />
+                    <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
                 </template>
             </Dialog>
 

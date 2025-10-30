@@ -2,6 +2,11 @@
 declare module 'primevue/config' {
     import type { Plugin } from 'vue';
     
+    interface CSSLayerOptions {
+        name: string;
+        order: string;
+    }
+
     interface PrimeVueOptions {
         ripple?: boolean;
         inputStyle?: 'outlined' | 'filled';
@@ -10,6 +15,10 @@ declare module 'primevue/config' {
         ptOptions?: any;
         theme?: {
             preset?: any;
+            options?: {
+                darkModeSelector?: string;
+                cssLayer?: boolean | CSSLayerOptions;
+            };
         };
     }
     
@@ -26,6 +35,18 @@ declare module 'primevue/column';
 declare module 'primevue/progressbar';
 declare module 'primevue/badge';
 declare module 'primevue/tag';
+declare module 'primevue/toolbar';
+declare module 'primevue/fileupload';
+declare module 'primevue/rating';
+declare module 'primevue/dialog';
+declare module 'primevue/iconfield';
+declare module 'primevue/inputicon';
+declare module 'primevue/dropdown';
+declare module 'primevue/radiobutton';
+declare module 'primevue/inputnumber';
+declare module 'primevue/textarea';
+declare module 'primevue/toast';
+declare module 'primevue/usetoast';
 
 // Theme declarations for @primeuix/themes
 declare module '@primeuix/themes/aura' {
