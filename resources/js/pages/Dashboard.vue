@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
 import { ref, onMounted } from 'vue';
 
 // Import PrimeVue components
@@ -95,12 +94,12 @@ const greeting = getGreeting();
 const userName = 'Alex Johnson'; // This could come from your auth system
 
 // Sample data for demonstration
-const testInput = ref('');
 const recentActivities = ref<Activity[]>([
     { id: 1, action: 'User Login', user: 'John Doe', time: '2 min ago', status: 'Completed' },
     { id: 2, action: 'Data Export', user: 'Jane Smith', time: '5 min ago', status: 'Processing' },
     { id: 3, action: 'Report Generated', user: 'Mike Johnson', time: '10 min ago', status: 'Completed' },
     { id: 4, action: 'System Backup', user: 'System', time: '15 min ago', status: 'Failed' },
+    { id: 5, action: 'Payment Received', user: 'Sarah Wilson', time: '1 hour ago', status: 'Completed' },
 ]);
 
 const recentOrders = ref<RecentOrder[]>([
@@ -239,8 +238,8 @@ const getOrderStatusSeverity = (status: string) => {
     }
 };
 
-const showAlert = () => {
-    alert(`You entered: ${testInput.value}`);
+const getTrendSeverity = (trend: 'up' | 'down') => {
+    return trend === 'up' ? 'success' : 'danger';
 };
 
 // Product Management Functions
@@ -365,8 +364,13 @@ const getStatusLabel = (status: string) => {
     }
 };
 
-const getTrendSeverity = (trend: 'up' | 'down') => {
-    return trend === 'up' ? 'success' : 'danger';
+const getActivityIcon = (status: string) => {
+    switch (status) {
+        case 'Completed': return 'pi pi-check-circle text-green-500';
+        case 'Processing': return 'pi pi-spinner text-yellow-500';
+        case 'Failed': return 'pi pi-times-circle text-red-500';
+        default: return 'pi pi-info-circle text-blue-500';
+    }
 };
 </script>
 
@@ -420,16 +424,19 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                             </div>
                         </template>
                         <template #content>
-                            <DataTable :value="recentOrders" class="p-datatable-sm" paginator :rows="5">
-                                <Column field="id" header="Order ID" style="min-width: 120px"></Column>
-                                <Column field="customer" header="Customer" style="min-width: 140px"></Column>
-                                <Column field="product" header="Product" style="min-width: 140px"></Column>
-                                <Column field="amount" header="Amount" style="min-width: 100px">
+                            <DataTable :value="recentOrders" class="p-datatable-sm" paginator :rows="5"
+                                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                                :rowsPerPageOptions="[5, 10, 25]"
+                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} orders">
+                                <Column field="id" header="Order ID" sortable style="min-width: 120px"></Column>
+                                <Column field="customer" header="Customer" sortable style="min-width: 140px"></Column>
+                                <Column field="product" header="Product" sortable style="min-width: 140px"></Column>
+                                <Column field="amount" header="Amount" sortable style="min-width: 100px">
                                     <template #body="slotProps">
                                         {{ formatCurrency(slotProps.data.amount) }}
                                     </template>
                                 </Column>
-                                <Column field="status" header="Status" style="min-width: 120px">
+                                <Column field="status" header="Status" sortable style="min-width: 120px">
                                     <template #body="slotProps">
                                         <Tag 
                                             :value="slotProps.data.status" 
@@ -437,7 +444,12 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                                         />
                                     </template>
                                 </Column>
-                                <Column field="date" header="Date" style="min-width: 120px"></Column>
+                                <Column field="date" header="Date" sortable style="min-width: 120px"></Column>
+                                <Column :exportable="false" style="min-width: 80px">
+                                    <template #body>
+                                        <Button icon="pi pi-ellipsis-v" text rounded />
+                                    </template>
+                                </Column>
                             </DataTable>
                         </template>
                     </Card>
@@ -452,17 +464,16 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                         </template>
                         <template #content>
                             <div class="space-y-4">
-                                <div v-for="activity in recentActivities" :key="activity.id" class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                    <div class="flex-shrink-0 w-2 h-2 mt-2 rounded-full" 
-                                         :class="{
-                                             'bg-green-500': activity.status === 'Completed',
-                                             'bg-yellow-500': activity.status === 'Processing',
-                                             'bg-red-500': activity.status === 'Failed'
-                                         }"></div>
+                                <div v-for="activity in recentActivities" :key="activity.id" 
+                                     class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <div class="flex-shrink-0 mt-1">
+                                        <i :class="getActivityIcon(activity.status)" class="text-lg"></i>
+                                    </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ activity.action }}</p>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ activity.action }}</p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ activity.user }} • {{ activity.time }}</p>
                                     </div>
+                                    <Tag :value="activity.status" :severity="getStatusSeverity(activity.status)" class="text-xs" />
                                 </div>
                             </div>
                         </template>
@@ -482,7 +493,7 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                                     </div>
                                 </div>
                                 <ProgressBar :value="85" class="h-2 [&_.p-progressbar-value]:bg-white" />
-                                <Button label="View Details" icon="pi pi-arrow-right" text class="justify-start p-0 text-white hover:bg-white/10" />
+                                <Button label="View Details" icon="pi pi-arrow-right" text class="justify-start p-0 text-white hover:bg-white/10 w-fit" />
                             </div>
                         </template>
                     </Card>
@@ -502,6 +513,33 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                 </template>
                 <template #content>
                     <div class="card">
+                        <Toolbar class="mb-4">
+                            <template #start>
+                                <Button 
+                                    label="Delete Selected" 
+                                    icon="pi pi-trash" 
+                                    severity="danger" 
+                                    @click="confirmDeleteSelected" 
+                                    :disabled="!selectedProducts || !selectedProducts.length" 
+                                />
+                            </template>
+
+                            <template #end>
+                                <FileUpload 
+                                    mode="basic" 
+                                    accept="image/*" 
+                                    :maxFileSize="1000000" 
+                                    label="Import" 
+                                    chooseLabel="Import" 
+                                    class="mr-2" 
+                                />
+                                <IconField iconPosition="left">
+                                    <InputIcon class="pi pi-search" />
+                                    <InputText v-model="filters['global'].value" placeholder="Search products..." />
+                                </IconField>
+                            </template>
+                        </Toolbar>
+
                         <DataTable
                             ref="dt"
                             v-model:selection="selectedProducts"
@@ -515,16 +553,6 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
                             class="p-datatable-sm"
                         >
-                            <template #header>
-                                <div class="flex flex-wrap gap-2 items-center justify-between">
-                                    <h4 class="m-0 text-lg font-semibold">Manage Products</h4>
-                                    <IconField iconPosition="left">
-                                        <InputIcon class="pi pi-search" />
-                                        <InputText v-model="filters['global'].value" placeholder="Search products..." />
-                                    </IconField>
-                                </div>
-                            </template>
-
                             <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                             <Column field="code" header="Code" sortable style="min-width: 8rem"></Column>
                             <Column field="name" header="Name" sortable style="min-width: 12rem"></Column>
@@ -580,17 +608,110 @@ const getTrendSeverity = (trend: 'up' | 'down') => {
                 </template>
             </Card>
 
-            <!-- Product Management Dialogs (keep your existing dialogs) -->
+            <!-- Product Management Dialogs -->
             <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true" class="p-fluid">
-                <!-- Your existing dialog content -->
+                <div class="flex flex-col gap-4">
+                    <div class="field">
+                        <label for="name" class="font-semibold">Name</label>
+                        <InputText 
+                            id="name" 
+                            v-model.trim="product.name" 
+                            required="true" 
+                            autofocus 
+                            :class="{ 'p-invalid': submitted && !product.name }" 
+                        />
+                        <small class="p-error" v-if="submitted && !product.name">Name is required.</small>
+                    </div>
+                    <div class="field">
+                        <label for="description" class="font-semibold">Description</label>
+                        <Textarea 
+                            id="description" 
+                            v-model="product.description" 
+                            required="true" 
+                            rows="3" 
+                            cols="20" 
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="inventoryStatus" class="font-semibold">Inventory Status</label>
+                        <Dropdown 
+                            id="inventoryStatus" 
+                            v-model="product.inventoryStatus" 
+                            :options="statuses" 
+                            optionLabel="label" 
+                            placeholder="Select a Status" 
+                        />
+                    </div>
+                    <div class="field">
+                        <label class="font-semibold mb-3 block">Category</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex items-center">
+                                <RadioButton id="category1" v-model="product.category" name="category" value="Accessories" />
+                                <label for="category1" class="ml-2">Accessories</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton id="category2" v-model="product.category" name="category" value="Clothing" />
+                                <label for="category2" class="ml-2">Clothing</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton id="category3" v-model="product.category" name="category" value="Electronics" />
+                                <label for="category3" class="ml-2">Electronics</label>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton id="category4" v-model="product.category" name="category" value="Fitness" />
+                                <label for="category4" class="ml-2">Fitness</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="field">
+                            <label for="price" class="font-semibold">Price</label>
+                            <InputNumber 
+                                id="price" 
+                                v-model="product.price" 
+                                mode="currency" 
+                                currency="USD" 
+                                locale="en-US" 
+                            />
+                        </div>
+                        <div class="field">
+                            <label for="quantity" class="font-semibold">Quantity</label>
+                            <InputNumber 
+                                id="quantity" 
+                                v-model="product.quantity" 
+                                integeronly 
+                            />
+                        </div>
+                    </div>
+                </div>
+                <template #footer>
+                    <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+                    <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+                </template>
             </Dialog>
 
             <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
-                <!-- Your existing dialog content -->
+                <div class="flex items-center gap-4">
+                    <i class="pi pi-exclamation-triangle text-3xl text-red-500" />
+                    <span v-if="product">
+                        Are you sure you want to delete <b>{{ product.name }}</b>?
+                    </span>
+                </div>
+                <template #footer>
+                    <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
+                    <Button label="Yes" icon="pi pi-check" text @click="deleteProduct" severity="danger" />
+                </template>
             </Dialog>
 
             <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
-                <!-- Your existing dialog content -->
+                <div class="flex items-center gap-4">
+                    <i class="pi pi-exclamation-triangle text-3xl text-red-500" />
+                    <span>Are you sure you want to delete the selected products?</span>
+                </div>
+                <template #footer>
+                    <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
+                    <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" severity="danger" />
+                </template>
             </Dialog>
         </div>
     </AppLayout>
